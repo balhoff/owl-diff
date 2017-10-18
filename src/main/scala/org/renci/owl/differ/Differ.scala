@@ -44,7 +44,7 @@ object Differ {
 
   final case class NonIRIGrouping(obj: OWLObject) extends Grouping
 
-  def loadOntologies(left: IRI, right: IRI, loadImports: Boolean): Future[(OWLOntology, OWLOntology)] = Future {
+  def loadOntologies(left: IRI, right: IRI, loadImports: Boolean): Future[(OWLOntology, OWLOntology)] = {
     val leftManager = OWLManager.createOWLOntologyManager()
     val rightManager = OWLManager.createOWLOntologyManager()
     if (!loadImports) {
@@ -53,7 +53,12 @@ object Differ {
       rightManager.createOntology(ImportDummy)
       rightManager.setIRIMappers(Set[OWLOntologyIRIMapper](DummyMapper).asJava)
     }
-    blocking { (leftManager.loadOntology(left), rightManager.loadOntology(right)) }
+    val leftOntologyFut = Future { blocking { leftManager.loadOntology(left) } }
+    val rightOntologyFut = Future { blocking { rightManager.loadOntology(right) } }
+    for {
+      leftOnt <- leftOntologyFut
+      rightOnt <- rightOntologyFut
+    } yield (leftOnt, rightOnt)
   }
 
   def diff(left: OWLOntology, right: OWLOntology): Diff = {
