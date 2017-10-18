@@ -83,18 +83,22 @@ object Differ {
     val htmlRenderer = new ManchesterOWLSyntaxOWLObjectRendererImpl()
     htmlRenderer.setShortFormProvider(htmlShortFormProvider)
     val sortedGroups = groups.keys.toSeq.sortBy(g => labelRenderer.render(objForGrouping(g)))
-
+    def htmlForAxiom(axiom: ModifiedAxiom) = s"""<li><span class="axiom">${htmlRenderer.render(axiom.axiom)}</span></li>"""
+    def changeList(header: String, axioms: Set[ModifiedAxiom]) = s"""
+        <h4 class="status-header">$header</h4>
+        <ul>
+        ${axioms.map(htmlForAxiom).mkString("\n")}
+        </ul>
+        """
     val content = (for {
       group <- sortedGroups
     } yield {
-      val changes = for {
-        ma <- groups(group)
-      } yield {
-        val status = if (ma.added) "Added:" else "Removed:"
-        s"""<li><span class="status-header">$status</span> <span class="axiom">${htmlRenderer.render(ma.axiom)}</span></li>"""
-      }
+      val removed = groups(group).filterNot(_.added)
+      val added = groups(group).filter(_.added)
+      val removedList = if (removed.nonEmpty) changeList("Removed", removed) else ""
+      val addedList = if (added.nonEmpty) changeList("Added", added) else ""
       val header = labelRenderer.render(objForGrouping(group))
-      s"""<h3 class="frame">$header</h3>\n<ul>${changes.mkString("\n")}</ul>"""
+      s"""<h3 class="frame">$header</h3>\n$removedList\n$addedList"""
     }).mkString("\n\n")
     s"""
 <html>
