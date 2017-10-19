@@ -25,7 +25,7 @@ object Home {
 			      <input class="form-control" name="left" id="left" placeholder="previous version">
         </div>
         <div class="form-group">
-			      <label class="form-label" for="right">New ontology URI:</label>
+			      <label class="form-label" for="right">New ontology URL:</label>
 			      <input class="form-control" name="right" id="right" placeholder="new version">
         </div>
         <div class="form-check">
