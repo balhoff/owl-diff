@@ -68,7 +68,7 @@ object Differ {
     val removed = leftAxioms -- rightAxioms
     val added = rightAxioms -- leftAxioms
     val allChangedAxioms = removed.map(ModifiedAxiom(_, false)) ++ added.map(ModifiedAxiom(_, true))
-    val grouped = (for {
+    val groupBySubject = for {
       ma @ ModifiedAxiom(ax, added) <- allChangedAxioms
       obj = AxiomSubjectProviderEx.getSubject(ax)
       grouping: Grouping = obj match {
@@ -76,7 +76,8 @@ object Differ {
         case iri: IRI              => IRIGrouping(factory.getOWLClass(iri))
         case _                     => NonIRIGrouping(obj)
       }
-    } yield Map(grouping -> Set(ma))).reduce(_ |+| _)
+    } yield Map(grouping -> Set(ma))
+    val grouped = if (groupBySubject.nonEmpty) groupBySubject.reduce(_ |+| _) else Map.empty[Grouping, Set[ModifiedAxiom]]
     Diff(grouped, right)
   }
 
@@ -120,6 +121,7 @@ object Differ {
         </div>"""
     }).mkString("\n\n")
     s"""
+<!DOCTYPE html>
 <html>
 <head>
 	<meta charset="utf-8">

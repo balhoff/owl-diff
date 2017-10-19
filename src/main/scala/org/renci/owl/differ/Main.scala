@@ -22,16 +22,21 @@ object Main extends HttpApp with App {
   implicit val IRIUnmarshaller: Unmarshaller[String, IRI] = Unmarshaller.strict(IRI.create)
 
   def routes: Route =
-    path("diff") {
-      parameters('left.as[IRI], 'right.as[IRI], 'loadimports.as[Boolean]) { (left, right, loadImports) =>
-        complete {
-          Differ.loadOntologies(left, right, loadImports).map {
-            case (leftOnt, rightOnt) =>
-              Differ.diff(leftOnt, rightOnt)
+    pathSingleSlash {
+      complete {
+        Home.homeForm
+      }
+    } ~
+      path("diff") {
+        parameters('left.as[IRI], 'right.as[IRI], 'loadimports.as[Boolean]) { (left, right, loadImports) =>
+          complete {
+            Differ.loadOntologies(left, right, loadImports).map {
+              case (leftOnt, rightOnt) =>
+                Differ.diff(leftOnt, rightOnt)
+            }
           }
         }
       }
-    }
 
   startServer(host = serverName, port = serverPort, settings = ServerSettings(conf), system)
 
