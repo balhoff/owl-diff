@@ -6,11 +6,15 @@ import org.semanticweb.owlapi.util.ShortFormProvider
 
 class HTMLShortFormProvider(labelProvider: ShortFormProvider) extends ShortFormProvider {
 
-  def dispose(): Unit = ()
+  def getShortForm(entity: OWLEntity): String = StringEscapeUtils.escapeHtml4(labelProvider.getShortForm(entity))
+
+}
+
+class HTMLLinkShortFormProvider(labelProvider: HTMLShortFormProvider) extends ShortFormProvider {
 
   def getShortForm(entity: OWLEntity): String = {
-    val escapedLabel = StringEscapeUtils.escapeHtml4(labelProvider.getShortForm(entity))
-    s"""<a href="${entity.getIRI}">$escapedLabel</a>"""
+    val label = labelProvider.getShortForm(entity)
+    s"""<a href="${entity.getIRI}">$label</a>"""
   }
 
 }
