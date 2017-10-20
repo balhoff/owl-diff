@@ -30,6 +30,8 @@ import akka.http.scaladsl.marshalling.ToEntityMarshaller
 import akka.http.scaladsl.model.MediaTypes
 import scalaz._
 import scalaz.Scalaz._
+import org.apache.commons.text.StringEscapeUtils
+import java.util.Optional
 
 object Differ {
 
@@ -98,7 +100,7 @@ object Differ {
     val rightImports = right.getImportsDeclarations.asScala.toSet
     val removedImports = leftImports -- rightImports
     val addedImports = rightImports -- leftImports
-    Diff(left.getOntologyID, right.getOntologyID, grouped, removedImports, addedImports, removedAnnotations, addedAnnotations, right)
+    Diff(left.getOntologyID, left.getOWLOntologyManager.getOntologyDocumentIRI(left), right.getOntologyID, right.getOWLOntologyManager.getOntologyDocumentIRI(right), grouped, removedImports, addedImports, removedAnnotations, addedAnnotations, right)
   }
 
   def render(diff: Diff): String = {
@@ -194,6 +196,20 @@ h3 {
 	<title>OWL diff</title>
 </head>
 <body>
+
+<h2>Ontology comparison</h2>
+<h3>New</h3>
+<ul>
+<li>Ontology IRI: ${optionalIRI(diff.rightID.getOntologyIRI)}</li>
+<li>Version IRI: ${optionalIRI(diff.rightID.getVersionIRI)}</li>
+<li>Loaded from: ${StringEscapeUtils.escapeHtml4(diff.rightSource.toQuotedString)}</li>
+</ul>
+<h3>Old</h3>
+<ul>
+<li>Ontology IRI: ${optionalIRI(diff.leftID.getOntologyIRI)}</li>
+<li>Version IRI: ${optionalIRI(diff.leftID.getVersionIRI)}</li>
+<li>Loaded from: ${StringEscapeUtils.escapeHtml4(diff.leftSource.toQuotedString)}</li>
+</ul>
 $importsContent
 $annotationsContent
 $content
@@ -201,9 +217,17 @@ $content
       """
   }
 
+  private def optionalIRI(iriOpt: Optional[IRI]): String = (for {
+    iri <- iriOpt.toOption
+  } yield {
+    StringEscapeUtils.escapeHtml4(iri.toQuotedString)
+  }).getOrElse("<i>None</i>")
+
   case class Diff(
     leftID: OWLOntologyID,
+    leftSource: IRI,
     rightID: OWLOntologyID,
+    rightSource: IRI,
     groups: Map[Grouping, Set[ModifiedAxiom]],
     removedImports: Set[OWLImportsDeclaration],
     addedImports: Set[OWLImportsDeclaration],
@@ -214,6 +238,12 @@ $content
   object Diff {
 
     implicit val DiffHTMLMarshaller: ToEntityMarshaller[Diff] = Marshaller.stringMarshaller(MediaTypes.`text/html`).compose(Differ.render)
+
+  }
+
+  implicit class OptionalOption[T](val self: Optional[T]) extends AnyVal {
+
+    def toOption: Option[T] = if (self.isPresent) Option(self.get) else None
 
   }
 
