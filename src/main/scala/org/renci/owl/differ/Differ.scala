@@ -6,13 +6,19 @@ import scala.concurrent.Future
 import scala.concurrent.blocking
 
 import org.semanticweb.owlapi.apibinding.OWLManager
+import org.semanticweb.owlapi.model.HasAnnotations
 import org.semanticweb.owlapi.model.IRI
+import org.semanticweb.owlapi.model.OWLAnnotation
 import org.semanticweb.owlapi.model.OWLAxiom
 import org.semanticweb.owlapi.model.OWLClass
+import org.semanticweb.owlapi.model.OWLClassExpression
+import org.semanticweb.owlapi.model.OWLImportsDeclaration
 import org.semanticweb.owlapi.model.OWLNamedObject
 import org.semanticweb.owlapi.model.OWLObject
 import org.semanticweb.owlapi.model.OWLOntology
+import org.semanticweb.owlapi.model.OWLOntologyID
 import org.semanticweb.owlapi.model.OWLOntologyIRIMapper
+import org.semanticweb.owlapi.model.SWRLObject
 import org.semanticweb.owlapi.model.parameters.Imports
 import org.semanticweb.owlapi.util.AnnotationValueShortFormProvider
 import org.semanticweb.owlapi.util.AxiomSubjectProviderEx
@@ -45,6 +51,10 @@ object Differ {
 
   final case class NonIRIGrouping(obj: OWLObject) extends Grouping
 
+  object GCIGrouping extends Grouping
+
+  object RuleGrouping extends Grouping
+
   def loadOntologies(left: IRI, right: IRI, loadImports: Boolean): Future[(OWLOntology, OWLOntology)] = {
     val leftManager = OWLManager.createOWLOntologyManager()
     val rightManager = OWLManager.createOWLOntologyManager()
@@ -72,54 +82,89 @@ object Differ {
       ma @ ModifiedAxiom(ax, added) <- allChangedAxioms
       obj = AxiomSubjectProviderEx.getSubject(ax)
       grouping: Grouping = obj match {
-        case named: OWLNamedObject => IRIGrouping(factory.getOWLClass(named.getIRI))
-        case iri: IRI              => IRIGrouping(factory.getOWLClass(iri))
-        case _                     => NonIRIGrouping(obj)
+        case named: OWLNamedObject   => IRIGrouping(factory.getOWLClass(named.getIRI))
+        case iri: IRI                => IRIGrouping(factory.getOWLClass(iri))
+        case gci: OWLClassExpression => GCIGrouping
+        case swrl: SWRLObject        => RuleGrouping
+        case _                       => NonIRIGrouping(obj)
       }
     } yield Map(grouping -> Set(ma))
     val grouped = if (groupBySubject.nonEmpty) groupBySubject.reduce(_ |+| _) else Map.empty[Grouping, Set[ModifiedAxiom]]
-    Diff(grouped, right)
+    val leftOntAnnotations = left.getAnnotations().asScala.toSet
+    val rightOntAnnotations = right.getAnnotations().asScala.toSet
+    val removedAnnotations = leftOntAnnotations -- rightOntAnnotations
+    val addedAnnotations = rightOntAnnotations -- leftOntAnnotations
+    val leftImports = left.getImportsDeclarations.asScala.toSet
+    val rightImports = right.getImportsDeclarations.asScala.toSet
+    val removedImports = leftImports -- rightImports
+    val addedImports = rightImports -- leftImports
+    Diff(left.getOntologyID, right.getOntologyID, grouped, removedImports, addedImports, removedAnnotations, addedAnnotations, right)
   }
 
-  private def render(groups: Map[Grouping, Set[ModifiedAxiom]], renderingOnt: OWLOntology): String = {
-    val shortFormProvider = new HTMLShortFormProvider(new AnnotationValueShortFormProvider(renderingOnt.getOWLOntologyManager, new SimpleShortFormProvider(), new HTMLSafeIRIShortFormProvider(new SimpleIRIShortFormProvider()), List(rdfsLabel).asJava, Map.empty.asJava))
+  def render(diff: Diff): String = {
+    val shortFormProvider = new HTMLShortFormProvider(new AnnotationValueShortFormProvider(diff.renderingOnt.getOWLOntologyManager, new SimpleShortFormProvider(), new HTMLSafeIRIShortFormProvider(new SimpleIRIShortFormProvider()), List(rdfsLabel).asJava, Map.empty.asJava))
     val htmlLinkShortFormProvider = new HTMLLinkShortFormProvider(shortFormProvider)
     val labelRenderer = new ManchesterSyntaxOWLObjectRenderer()
     labelRenderer.setShortFormProvider(shortFormProvider)
     val htmlRenderer = new ManchesterSyntaxOWLObjectRenderer()
     htmlRenderer.setShortFormProvider(htmlLinkShortFormProvider)
-    val sortedGroups = groups.keys.toSeq.sortBy(g => labelRenderer.render(objForGrouping(g)))
+    val groupsToLabels: Map[Grouping, String] = (diff.groups.keys.map { group =>
+      group match {
+        case IRIGrouping(term)   => group -> labelRenderer.render(term)
+        case GCIGrouping         => group -> "GCIs"
+        case RuleGrouping        => group -> "Rules"
+        case NonIRIGrouping(obj) => group -> labelRenderer.render(obj)
+      }
+    }).toMap
+    val sortedGroups = diff.groups.keys.toSeq.sortBy(groupsToLabels)
     def htmlForObject(obj: OWLObject): String = {
-      val annotations = if (obj.isInstanceOf[OWLAxiom]) {
-        val inner = obj.asInstanceOf[OWLAxiom].getAnnotations().asScala.map(htmlForObject(_)).mkString("\n")
-        s"<ul>$inner</ul>"
-      } else ""
-      s"""<li><span class="axiom">${htmlRenderer.render(obj)}</span> $annotations </li>""".replaceAllLiterally("<h", "&lt;h")
+      val (annotations, objToRender) = if (obj.isInstanceOf[HasAnnotations]) {
+        val inner = obj.asInstanceOf[HasAnnotations].getAnnotations().asScala.map(htmlForObject(_)).mkString("\n")
+        val objWithoutAnnotations = obj match {
+          case ax: OWLAxiom       => ax.getAxiomWithoutAnnotations()
+          case ann: OWLAnnotation => factory.getOWLAnnotation(ann.getProperty, ann.getValue)
+          case _                  => obj
+        }
+        s"<ul>$inner</ul>" -> objWithoutAnnotations
+      } else "" -> obj
+      s"""<li><span class="axiom">${htmlRenderer.render(objToRender)}</span> $annotations </li>"""
     }
-    def changeList(header: String, axioms: Seq[ModifiedAxiom]) = s"""
+    def changeList(header: String, axioms: Seq[OWLObject]) = s"""
         <h4 class="status-header">$header</h4>
         <ul>
-        ${axioms.map(ax => htmlForObject(ax.axiom)).mkString("\n")}
+        ${axioms.map(htmlForObject).mkString("\n")}
         </ul>
         """
-    val content = (for {
-      group <- sortedGroups
-    } yield {
-      val removed = groups(group).filterNot(_.added).toSeq.sortBy(_.axiom.getAxiomType.getName)
-      val added = groups(group).filter(_.added).toSeq.sortBy(_.axiom.getAxiomType.getName)
-      val removedList = if (removed.nonEmpty) changeList("Removed", removed) else ""
-      val addedList = if (added.nonEmpty) changeList("Added", added) else ""
-      val header = labelRenderer.render(objForGrouping(group))
-      val headerIRI = group match {
-        case IRIGrouping(term)   => term.getIRI.toString
-        case NonIRIGrouping(obj) => ""
-      }
+    def frameElement(header: String, headerIRI: String, removedList: String, addedList: String) =
       s"""<div class="frame">
-        <h3>$header <span class="frame-iri">- $headerIRI</span></h3>
+        <h3>$header <span class="frame-iri">$headerIRI</span></h3>
         $removedList
         $addedList
         </div>"""
+    val content = (for {
+      group <- sortedGroups
+    } yield {
+      val removed = diff.groups(group).filterNot(_.added).toSeq.sortBy(_.axiom.getAxiomType.getName)
+      val added = diff.groups(group).filter(_.added).toSeq.sortBy(_.axiom.getAxiomType.getName)
+      val removedList = if (removed.nonEmpty) changeList("Removed", removed.map(_.axiom)) else ""
+      val addedList = if (added.nonEmpty) changeList("Added", added.map(_.axiom)) else ""
+      val header = groupsToLabels(group)
+      val headerIRI = group match {
+        case IRIGrouping(term) => s"- ${term.getIRI}"
+        case _                 => ""
+      }
+      frameElement(header, headerIRI, removedList, addedList)
     }).mkString("\n\n")
+    val importsContent = if (diff.removedImports.nonEmpty || diff.addedImports.nonEmpty) {
+      val removedImportsList = if (diff.removedImports.nonEmpty) changeList("Removed", diff.removedImports.map(_.getIRI).toSeq) else ""
+      val addedImportsList = if (diff.addedImports.nonEmpty) changeList("Added", diff.addedImports.map(_.getIRI).toSeq) else ""
+      frameElement("Ontology imports", "", removedImportsList, addedImportsList)
+    } else ""
+    val annotationsContent = if (diff.removedAnnotations.nonEmpty || diff.addedAnnotations.nonEmpty) {
+      val removedAnnotationsList = if (diff.removedAnnotations.nonEmpty) changeList("Removed", diff.removedAnnotations.toSeq) else ""
+      val addedAnnotationsList = if (diff.addedAnnotations.nonEmpty) changeList("Added", diff.addedAnnotations.toSeq) else ""
+      frameElement("Ontology annotations", "", removedAnnotationsList, addedAnnotationsList)
+    } else ""
     s"""
 <!DOCTYPE html>
 <html>
@@ -133,6 +178,10 @@ div.frame {
 .status-header {
     font-style: italic;
     margin-top: 0;
+    margin-bottom: 0;
+}
+.frame > ul {
+    margin-top: 0.3em;
 }
 h3 {
     margin-bottom: 0.5em;
@@ -145,23 +194,27 @@ h3 {
 	<title>OWL diff</title>
 </head>
 <body>
+$importsContent
+$annotationsContent
 $content
 </body>
       """
   }
 
-  private def objForGrouping(grouping: Grouping): OWLObject = grouping match {
-    case IRIGrouping(term)   => term
-    case NonIRIGrouping(obj) => obj
-  }
-
-  case class Diff(groups: Map[Grouping, Set[ModifiedAxiom]], renderingOnt: OWLOntology)
+  case class Diff(
+    leftID: OWLOntologyID,
+    rightID: OWLOntologyID,
+    groups: Map[Grouping, Set[ModifiedAxiom]],
+    removedImports: Set[OWLImportsDeclaration],
+    addedImports: Set[OWLImportsDeclaration],
+    removedAnnotations: Set[OWLAnnotation],
+    addedAnnotations: Set[OWLAnnotation],
+    renderingOnt: OWLOntology)
 
   object Diff {
 
-    implicit val DiffHTMLMarshaller: ToEntityMarshaller[Diff] = Marshaller.stringMarshaller(MediaTypes.`text/html`).compose { diff =>
-      Differ.render(diff.groups, diff.renderingOnt)
-    }
+    implicit val DiffHTMLMarshaller: ToEntityMarshaller[Diff] = Marshaller.stringMarshaller(MediaTypes.`text/html`).compose(Differ.render)
+
   }
 
 }
