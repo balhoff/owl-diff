@@ -28,7 +28,7 @@ object Main extends HttpApp with App {
       }
     } ~
       path("diff") {
-        parameters('left.as[IRI], 'right.as[IRI], 'loadimports.as[Boolean]) { (left, right, loadImports) =>
+        parameters('left.as[IRI], 'right.as[IRI], 'loadimports.as[Boolean].?(false)) { (left, right, loadImports) =>
           complete {
             Differ.loadOntologies(left, right, loadImports).map {
               case (leftOnt, rightOnt) =>

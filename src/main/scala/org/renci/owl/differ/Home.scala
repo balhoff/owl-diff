@@ -19,7 +19,7 @@ object Home {
 <div class="container-fluid">
     <h2>Basic OWL diff</h2>
     <p>Enter URLs for two versions of an OWL ontology to see a listing of added and removed axioms.</p>
-	  <form action="https://stars-app.renci.org/owldiff/diff">
+	  <form action="diff">
         <div class="form-group">
 			      <label class="form-label" for="left">Previous ontology URL:</label>
 			      <input class="form-control" name="left" id="left" placeholder="previous version">
@@ -30,7 +30,7 @@ object Home {
         </div>
         <div class="form-check">
             <label class="form-check-label" for="loadimports">
-                <input class="form-check-input" type="checkbox" name="loadimports" id="loadimports" checked="true" >
+                <input class="form-check-input" type="checkbox" name="loadimports" id="loadimports" value="true" checked="checked">
                 Load imports
             </label>
         </div>

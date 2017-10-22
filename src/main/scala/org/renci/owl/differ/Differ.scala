@@ -39,10 +39,14 @@ object Differ {
 
   private val rdfsLabel = factory.getRDFSLabel()
 
-  private val ImportDummy = IRI.create("http://example.org/owl/import/nothing.owl")
-
   private object DummyMapper extends OWLOntologyIRIMapper {
-    def getDocumentIRI(ontIRI: IRI): IRI = ImportDummy
+
+    def getDocumentIRI(ontIRI: IRI): IRI = {
+      val manager = OWLManager.createOWLOntologyManager()
+      val ont = manager.createOntology(ontIRI)
+      ont.getOntologyID.getDefaultDocumentIRI.orElse(null)
+    }
+
   }
 
   final case class ModifiedAxiom(axiom: OWLAxiom, added: Boolean)
@@ -61,9 +65,7 @@ object Differ {
     val leftManager = OWLManager.createOWLOntologyManager()
     val rightManager = OWLManager.createOWLOntologyManager()
     if (!loadImports) {
-      leftManager.createOntology(ImportDummy)
       leftManager.setIRIMappers(Set[OWLOntologyIRIMapper](DummyMapper).asJava)
-      rightManager.createOntology(ImportDummy)
       rightManager.setIRIMappers(Set[OWLOntologyIRIMapper](DummyMapper).asJava)
     }
     val leftOntologyFut = Future { blocking { leftManager.loadOntology(left) } }
