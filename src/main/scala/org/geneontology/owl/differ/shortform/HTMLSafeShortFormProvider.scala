@@ -1,23 +1,25 @@
-package org.renci.owl.differ
+package org.geneontology.owl.differ.shortform
 
 import org.apache.commons.text.StringEscapeUtils
-import org.semanticweb.owlapi.model.IRI
-import org.semanticweb.owlapi.model.OWLEntity
-import org.semanticweb.owlapi.util.IRIShortFormProvider
-import org.semanticweb.owlapi.util.ShortFormProvider
+import org.semanticweb.owlapi.model.{IRI, OWLEntity}
+import org.semanticweb.owlapi.util.{IRIShortFormProvider, ShortFormProvider}
 
-class HTMLShortFormProvider(labelProvider: ShortFormProvider) extends ShortFormProvider {
+class HTMLSafeShortFormProvider(labelProvider: ShortFormProvider) extends ShortFormProvider {
 
   def getShortForm(entity: OWLEntity): String = StringEscapeUtils.escapeHtml4(labelProvider.getShortForm(entity))
 
+  override def dispose(): Unit = ()
+
 }
 
-class HTMLLinkShortFormProvider(labelProvider: HTMLShortFormProvider) extends ShortFormProvider {
+class HTMLLinkShortFormProvider(labelProvider: HTMLSafeShortFormProvider) extends ShortFormProvider {
 
   def getShortForm(entity: OWLEntity): String = {
     val label = labelProvider.getShortForm(entity)
     s"""<a href="${entity.getIRI}">$label</a>"""
   }
+
+  override def dispose(): Unit = ()
 
 }
 
