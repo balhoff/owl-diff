@@ -98,7 +98,7 @@ object Differ {
 
   final case class BasicDiff(left: OntologyContent, right: OntologyContent) {
 
-    def isEmpty: Boolean = left.isEmpty && right.isEmpty
+    def isEmpty: Boolean = (left.id == right.id) && left.isEmpty && right.isEmpty
 
   }
 

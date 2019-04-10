@@ -18,8 +18,8 @@ object MarkdownGroupedDiffRenderer {
 
   private val rdfsLabel = factory.getRDFSLabel
 
-  def render(diff: GroupedDiff, renderingOnt: OWLOntology): String = {
-    val labelProvider = new AnnotationValueShortFormProvider(List(rdfsLabel).asJava, Map.empty[OWLAnnotationProperty, java.util.List[String]].asJava, renderingOnt.getOWLOntologyManager)
+  def render(diff: GroupedDiff, renderingOntologyProvider: OWLOntologySetProvider): String = {
+    val labelProvider = new AnnotationValueShortFormProvider(List(rdfsLabel).asJava, Map.empty[OWLAnnotationProperty, java.util.List[String]].asJava, renderingOntologyProvider)
     val markdownLinkProvider = new MarkdownLinkShortFormProvider(labelProvider)
     val labelRenderer = new ManchesterSyntaxOWLObjectRenderer()
     labelRenderer.setShortFormProvider(labelProvider)

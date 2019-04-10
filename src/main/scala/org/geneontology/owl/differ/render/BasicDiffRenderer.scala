@@ -11,7 +11,10 @@ object BasicDiffRenderer {
     if (diff.isEmpty) "Ontologies are identical"
     else {
       val (left, right) = groups(diff)
-      format(left.map(_.toString), right.map(_.toString))
+      val leftRendered = left.map(_.toString)
+      val rightRendered = right.map(_.toString)
+      if (diff.left.id == diff.right.id) format(leftRendered, rightRendered)
+      else format(leftRendered + diff.left.id.toString, rightRendered + diff.right.id.toString)
     }
   }
 
@@ -20,7 +23,10 @@ object BasicDiffRenderer {
     else {
       val renderer = new ShortFormFunctionalSyntaxObjectRenderer(shortFormProvider)
       val (left, right) = groups(diff)
-      format(left.map(renderer.render), right.map(renderer.render))
+      val leftRendered = left.map(renderer.render)
+      val rightRendered = right.map(renderer.render)
+      if (diff.left.id == diff.right.id) format(leftRendered, rightRendered)
+      else format(leftRendered + diff.left.id.toString, rightRendered + diff.right.id.toString)
     }
   }
 
@@ -35,8 +41,7 @@ object BasicDiffRenderer {
     val removedSorted = removedLines.map(replaceNewlines).map(ax => s"- $ax").toSeq.sorted.mkString("\n")
     val addedSorted = addedLines.map(replaceNewlines).map(ax => s"+ $ax").toSeq.sorted.mkString("\n")
     s"""${removedLines.size} axioms in Ontology 1 but not in Ontology 2:
-$removedSorted
-
+$removedSorted${if (removedSorted.nonEmpty) "\n" else ""}
 ${addedLines.size} axioms in Ontology 2 but not in Ontology 1:
 $addedSorted
 """

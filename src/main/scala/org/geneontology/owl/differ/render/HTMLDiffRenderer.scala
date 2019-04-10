@@ -18,8 +18,8 @@ object HTMLDiffRenderer {
 
   private val rdfsLabel = factory.getRDFSLabel
 
-  def render(diff: GroupedDiff, renderingOnt: OWLOntology): String = {
-    val shortFormProvider = new HTMLSafeShortFormProvider(new AnnotationValueShortFormProvider(renderingOnt.getOWLOntologyManager, new SimpleShortFormProvider(), new HTMLSafeIRIShortFormProvider(new SimpleIRIShortFormProvider()), List(rdfsLabel).asJava, Map.empty[OWLAnnotationProperty, java.util.List[String]].asJava))
+  def render(diff: GroupedDiff, renderingOntologyProvider: OWLOntologySetProvider): String = {
+    val shortFormProvider = new HTMLSafeShortFormProvider(new AnnotationValueShortFormProvider(renderingOntologyProvider, new SimpleShortFormProvider(), new HTMLSafeIRIShortFormProvider(new SimpleIRIShortFormProvider()), List(rdfsLabel).asJava, Map.empty[OWLAnnotationProperty, java.util.List[String]].asJava))
     val htmlLinkShortFormProvider = new HTMLLinkShortFormProvider(shortFormProvider)
     val labelRenderer = new ManchesterSyntaxOWLObjectRenderer()
     labelRenderer.setShortFormProvider(shortFormProvider)

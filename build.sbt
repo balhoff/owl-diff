@@ -2,7 +2,7 @@ organization  := "org.geneontology"
 
 name          := "owl-diff"
 
-version       := "1.0"
+version       := "1.1"
 
 publishMavenStyle := true
 
@@ -47,4 +47,3 @@ pomExtra :=
         <email>jim@balhoff.org</email>
       </developer>
     </developers>
-  
