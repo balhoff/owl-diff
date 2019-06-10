@@ -2,7 +2,7 @@ organization  := "org.geneontology"
 
 name          := "owl-diff"
 
-version       := "1.1"
+version       := "1.2-SNAPSHOT"
 
 publishMavenStyle := true
 
@@ -20,7 +20,9 @@ licenses := Seq("BSD-3-Clause" -> url("https://opensource.org/licenses/BSD-3-Cla
 
 homepage := Some(url("https://github.com/balhoff/owl-diff"))
 
-scalaVersion  := "2.12.8"
+scalaVersion  := "2.13.0"
+
+crossScalaVersions := Seq("2.10.6", "2.11.12", "2.12.8", "2.13.0")
 
 scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
 

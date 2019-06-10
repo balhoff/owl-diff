@@ -6,6 +6,8 @@ import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.functional.renderer.FunctionalSyntaxObjectRenderer
 import org.semanticweb.owlapi.model._
 import org.semanticweb.owlapi.util.ShortFormProvider
+import org.semanticweb.owlapi.vocab.OWLXMLVocabulary
+import org.semanticweb.owlapi.vocab.OWLXMLVocabulary.{ANNOTATION_PROPERTY, CLASS, DATATYPE, DATA_PROPERTY, NAMED_INDIVIDUAL, OBJECT_PROPERTY}
 
 class ShortFormFunctionalSyntaxObjectRenderer(shortFormProvider: ShortFormProvider) {
 
@@ -37,21 +39,85 @@ class ShortFormFunctionalSyntaxObjectRenderer(shortFormProvider: ShortFormProvid
 
   private class ShortFormFunctionalRenderer(writer: Writer) extends FunctionalSyntaxObjectRenderer(ShortFormFunctionalSyntaxObjectRenderer.emptyOntology, writer) {
 
-    override def visit(cls: OWLClass): Unit = write(cls)
+    private[this] var writeEntityType: Boolean = false
 
-    override def visit(cls: OWLObjectProperty): Unit = write(cls)
+    override def visit(e: OWLClass): Unit = {
+      if (writeEntityType) {
+        write(CLASS)
+        writeOpenBracket()
+      }
+      write(e)
+      if (writeEntityType) {
+        writeCloseBracket()
+      }
+    }
 
-    override def visit(cls: OWLDataProperty): Unit = write(cls)
+    override def visit(e: OWLObjectProperty): Unit = {
+      if (writeEntityType) {
+        write(OBJECT_PROPERTY)
+        writeOpenBracket()
+      }
+      write(e)
+      if (writeEntityType) {
+        writeCloseBracket()
+      }
+    }
 
-    override def visit(cls: OWLAnnotationProperty): Unit = write(cls)
+    override def visit(e: OWLDataProperty): Unit = {
+      if (writeEntityType) {
+        write(DATA_PROPERTY)
+        writeOpenBracket()
+      }
+      write(e)
+      if (writeEntityType) {
+        writeCloseBracket()
+      }
+    }
 
-    override def visit(cls: OWLNamedIndividual): Unit = write(cls)
+    override def visit(e: OWLAnnotationProperty): Unit = {
+      if (writeEntityType) {
+        write(ANNOTATION_PROPERTY)
+        writeOpenBracket()
+      }
+      write(e)
+      if (writeEntityType) {
+        writeCloseBracket()
+      }
+    }
 
-    override def visit(cls: OWLDatatype): Unit = write(cls)
+    override def visit(e: OWLNamedIndividual): Unit = {
+      if (writeEntityType) {
+        write(NAMED_INDIVIDUAL)
+        writeOpenBracket()
+      }
+      write(e)
+      if (writeEntityType) {
+        writeCloseBracket()
+      }
+    }
+
+    override def visit(e: OWLDatatype): Unit = {
+      if (writeEntityType) {
+        write(DATATYPE)
+        writeOpenBracket()
+      }
+      write(e)
+      if (writeEntityType) {
+        writeCloseBracket()
+      }
+    }
 
     override def visit(iri: IRI): Unit = visit(factory.getOWLClass(iri))
 
+    override def visit(axiom: OWLDeclarationAxiom): Unit = {
+      writeEntityType = true
+      super.visit(axiom)
+      writeEntityType = false
+    }
+
     private def write(entity: OWLEntity): Unit = writer.write(shortFormProvider.getShortForm(entity))
+
+    private def write(v: OWLXMLVocabulary): Unit = writer.write(v.getShortForm)
 
   }
 
