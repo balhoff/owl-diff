@@ -2,7 +2,7 @@ organization  := "org.geneontology"
 
 name          := "owl-diff"
 
-version       := "1.2"
+version       := "1.2.1"
 
 publishMavenStyle := true
 
