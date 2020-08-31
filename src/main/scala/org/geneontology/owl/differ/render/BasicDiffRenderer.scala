@@ -46,9 +46,9 @@ object BasicDiffRenderer {
     import org.geneontology.owl.differ.Util.replaceNewlines
     val removedSorted = removedLines.map(replaceNewlines).map(ax => s"- $ax").toSeq.sorted.mkString("\n")
     val addedSorted = addedLines.map(replaceNewlines).map(ax => s"+ $ax").toSeq.sorted.mkString("\n")
-    s"""${removedLines.size} axioms in Ontology 1 but not in Ontology 2:
+    s"""${removedLines.size} axioms in left ontology but not in right ontology:
 $removedSorted${if (removedSorted.nonEmpty) "\n" else ""}
-${addedLines.size} axioms in Ontology 2 but not in Ontology 1:
+${addedLines.size} axioms in right ontology but not in left ontology:
 $addedSorted
 """
   }
