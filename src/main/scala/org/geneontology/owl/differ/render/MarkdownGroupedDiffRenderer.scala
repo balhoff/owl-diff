@@ -58,12 +58,12 @@ object MarkdownGroupedDiffRenderer {
     val header =
       s"""# Ontology comparison
 
-## Old
+## Left
 - Ontology IRI: ${optionalIRI(diff.left.getOntologyIRI)}
 - Version IRI: ${optionalIRI(diff.left.getVersionIRI)}
 - Loaded from: `${diff.leftSource}`
 
-## New
+## Right
 - Ontology IRI: ${optionalIRI(diff.right.getOntologyIRI)}
 - Version IRI: ${optionalIRI(diff.right.getVersionIRI)}
 - Loaded from: `${diff.rightSource}`"""

@@ -116,13 +116,13 @@ h3 {
 <body>
 
 <h2>Ontology comparison</h2>
-<h3>Old</h3>
+<h3>Left</h3>
 <ul>
 <li>Ontology IRI: ${optionalIRI(diff.left.getOntologyIRI)}</li>
 <li>Version IRI: ${optionalIRI(diff.left.getVersionIRI)}</li>
 <li>Loaded from: ${StringEscapeUtils.escapeHtml4(diff.leftSource.toQuotedString)}</li>
 </ul>
-<h3>New</h3>
+<h3>Right</h3>
 <ul>
 <li>Ontology IRI: ${optionalIRI(diff.right.getOntologyIRI)}</li>
 <li>Version IRI: ${optionalIRI(diff.right.getVersionIRI)}</li>
