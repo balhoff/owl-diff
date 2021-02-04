@@ -13,7 +13,7 @@ object BasicDiffRenderer {
       val (left, right) = groups(diff)
       val leftRendered = left.map(_.item.toString)
       val rightRendered = right.map(_.item.toString)
-      if (diff.left.id == diff.right.id) format(leftRendered, rightRendered)
+      if ((diff.left.id == diff.right.id) || (diff.left.id.isAnonymous && diff.right.id.isAnonymous)) format(leftRendered, rightRendered)
       else format(leftRendered + diff.left.id.toString, rightRendered + diff.right.id.toString)
     }
   }
@@ -31,7 +31,7 @@ object BasicDiffRenderer {
         case OWLObjectItem(item) => renderer.render(item)
         case OWLImportItem(item) => item.toString
       }
-      if (diff.left.id == diff.right.id) format(leftRendered, rightRendered)
+      if ((diff.left.id == diff.right.id) || (diff.left.id.isAnonymous && diff.right.id.isAnonymous)) format(leftRendered, rightRendered)
       else format(leftRendered + diff.left.id.toString, rightRendered + diff.right.id.toString)
     }
   }
