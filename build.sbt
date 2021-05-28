@@ -22,7 +22,7 @@ homepage := Some(url("https://github.com/balhoff/owl-diff"))
 
 scalaVersion  := "2.13.4"
 
-crossScalaVersions := Seq("2.11.12", "2.12.12", "2.13.4")
+crossScalaVersions := Seq("2.11.12", "2.12.14", "2.13.4")
 
 scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
 
