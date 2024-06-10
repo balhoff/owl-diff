@@ -20,9 +20,9 @@ licenses := Seq("BSD-3-Clause" -> url("https://opensource.org/licenses/BSD-3-Cla
 
 homepage := Some(url("https://github.com/balhoff/owl-diff"))
 
-scalaVersion  := "2.13.8"
+scalaVersion  := "2.13.14"
 
-crossScalaVersions := Seq("2.11.12", "2.12.19", "2.13.8")
+crossScalaVersions := Seq("2.11.12", "2.12.19", "2.13.14")
 
 scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
 
@@ -33,7 +33,7 @@ fork in Test := true
 libraryDependencies ++= {
   Seq(
     "net.sourceforge.owlapi" %  "owlapi-distribution" % "4.5.22",
-    "org.apache.commons"     %  "commons-text"        % "1.9"
+    "org.apache.commons"     %  "commons-text"        % "1.12.0"
   )
 }
 
