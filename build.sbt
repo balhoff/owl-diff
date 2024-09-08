@@ -32,7 +32,7 @@ fork in Test := true
 
 libraryDependencies ++= {
   Seq(
-    "net.sourceforge.owlapi" %  "owlapi-distribution" % "4.5.29",
+    "net.sourceforge.owlapi" %  "owlapi-distribution" % "5.5.1",
     "org.apache.commons"     %  "commons-text"        % "1.12.0"
   )
 }
