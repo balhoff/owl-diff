@@ -69,9 +69,12 @@ object HTMLDiffRenderer {
       group <- sortedGroups
     } yield {
       def sortKey(modifiedItem: ModifiedOntologyContent[_]): String = modifiedItem match {
-        case ModifiedAnnotation(item, _) => item.toString
-        case ModifiedImport(item, _)     => item.toString
-        case ModifiedAxiom(item, _)      => item.getAxiomType.getName
+        case ModifiedOntologyAnnotation(item, _) => item.toString
+        case ModifiedImport(item, _)             => item.toString
+        case ModifiedAxiom(item, _)      => item.getAxiomType match {
+          case AxiomType.DECLARATION => s"1-${item.toString}"
+          case _                     => s"2-${item.toString}"
+        }
       }
 
       val removed = diff.groups(group).filterNot(_.added).toSeq.sortBy(sortKey)
