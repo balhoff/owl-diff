@@ -1,0 +1,59 @@
+Prefix(:=<http://example.org//>)
+Prefix(owl:=<http://www.w3.org/2002/07/owl#>)
+Prefix(rdf:=<http://www.w3.org/1999/02/22-rdf-syntax-ns#>)
+Prefix(xml:=<http://www.w3.org/XML/1998/namespace>)
+Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)
+Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)
+
+
+Ontology(<http://example.org/>
+
+Declaration(Class(<http://example.org/A>))
+Declaration(Class(<http://example.org/B>))
+Declaration(Class(<http://example.org/C>))
+Declaration(Class(<http://example.org/D>))
+Declaration(Class(<http://example.org/E>))
+Declaration(AnnotationProperty(<http://example.org/1>))
+############################
+#   Annotation Properties
+############################
+
+# Annotation Property: <http://example.org/1> (definition)
+
+AnnotationAssertion(rdfs:label <http://example.org/1> "definition")
+
+
+
+############################
+#   Classes
+############################
+
+# Class: <http://example.org/A> (class five-one)
+
+AnnotationAssertion(<http://example.org/1> <http://example.org/A> "Definition one-five.")
+AnnotationAssertion(rdfs:label <http://example.org/A> "class five-one")
+EquivalentClasses(<http://example.org/A> <http://example.org/E>)
+SubClassOf(<http://example.org/A> <http://example.org/C>)
+
+# Class: <http://example.org/B> (class two)
+
+AnnotationAssertion(<http://example.org/1> <http://example.org/B> "Definition two.")
+AnnotationAssertion(rdfs:label <http://example.org/B> "class two")
+
+# Class: <http://example.org/C> (class three)
+
+AnnotationAssertion(rdfs:label <http://example.org/C> "class three")
+EquivalentClasses(<http://example.org/C> <http://example.org/D>)
+
+# Class: <http://example.org/D> (class four)
+
+AnnotationAssertion(rdfs:label <http://example.org/D> "class four")
+
+# Class: <http://example.org/E> (class five)
+
+AnnotationAssertion(<http://example.org/1> <http://example.org/E> "Definition a.")
+AnnotationAssertion(<http://example.org/1> <http://example.org/E> "Definition five.")
+AnnotationAssertion(rdfs:label <http://example.org/E> "class five")
+
+
+)
