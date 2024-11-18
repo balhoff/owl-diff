@@ -32,7 +32,7 @@ object Differ {
 
   }
 
-  final case class ModifiedAnnotation(item: OWLAnnotation, added: Boolean) extends ModifiedOntologyContent[OWLAnnotation] {
+  final case class ModifiedOntologyAnnotation(item: OWLAnnotation, added: Boolean) extends ModifiedOntologyContent[OWLAnnotation] {
 
     def owlObject: OWLObject = item
 
@@ -73,9 +73,9 @@ object Differ {
   def groupedDiff(diff: BasicDiff): GroupedDiff = {
     val allChangedAxioms: Set[ModifiedOntologyContent[_]] = diff.left.axioms.map(ModifiedAxiom(_, false)) ++ diff.right.axioms.map(ModifiedAxiom(_, true))
     val allChangedImports: Set[ModifiedOntologyContent[_]] = diff.left.imports.map(ModifiedImport(_, false)) ++ diff.right.imports.map(ModifiedImport(_, true))
-    val allChangedAnnotations: Set[ModifiedOntologyContent[_]] = diff.left.annotations.map(ModifiedAnnotation(_, false)) ++ diff.right.annotations.map(ModifiedAnnotation(_, true))
+    val allChangedAnnotations: Set[ModifiedOntologyContent[_]] = diff.left.annotations.map(ModifiedOntologyAnnotation(_, false)) ++ diff.right.annotations.map(ModifiedOntologyAnnotation(_, true))
     val groupedAxioms = allChangedAxioms.groupBy {
-      case ModifiedAxiom(ax, _)     =>
+      case ModifiedAxiom(ax, _)             =>
         AxiomSubjectProviderInst.getSubject(ax) match {
           case named: OWLNamedObject => IRIGrouping(named.getIRI)
           case iri: IRI              => IRIGrouping(iri)
@@ -83,8 +83,8 @@ object Differ {
           case _: SWRLObject         => RuleGrouping
           case subj                  => NonIRIGrouping(subj)
         }
-      case ModifiedAnnotation(_, _) => OntologyAnnotationGrouping //shouldn't be matched
-      case ModifiedImport(_, _)     => OntologyImportGrouping //shouldn't be matched
+      case ModifiedOntologyAnnotation(_, _) => OntologyAnnotationGrouping //shouldn't be matched
+      case ModifiedImport(_, _)             => OntologyImportGrouping //shouldn't be matched
     }
     val allGrouped = groupedAxioms + (OntologyImportGrouping -> allChangedImports) + (OntologyAnnotationGrouping -> allChangedAnnotations)
     GroupedDiff(diff.left.id, diff.left.source, diff.right.id, diff.right.source, allGrouped)

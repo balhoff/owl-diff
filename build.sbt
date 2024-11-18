@@ -22,18 +22,20 @@ homepage := Some(url("https://github.com/balhoff/owl-diff"))
 
 scalaVersion  := "2.13.15"
 
-crossScalaVersions := Seq("2.11.12", "2.12.20", "2.13.15")
+crossScalaVersions := Seq("2.12.20", "2.13.15")
 
 scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
 
-scalacOptions in Test ++= Seq("-Yrangepos")
+Test / scalacOptions ++= Seq("-Yrangepos")
 
-fork in Test := true
+testFrameworks += new TestFramework("utest.runner.Framework")
 
 libraryDependencies ++= {
   Seq(
     "net.sourceforge.owlapi" %  "owlapi-distribution" % "4.5.29",
-    "org.apache.commons"     %  "commons-text"        % "1.12.0"
+    "org.apache.commons"     %  "commons-text"        % "1.12.0",
+    "com.lihaoyi"            %% "utest"               % "0.8.3"  % Test,
+    "com.outr"               %% "scribe-slf4j2"       % "3.15.2" % Test
   )
 }
 
