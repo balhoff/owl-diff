@@ -2,7 +2,7 @@ organization  := "org.geneontology"
 
 name          := "owl-diff"
 
-version       := "1.2.2"
+version       := "1.3-SNAPSHOT"
 
 publishMavenStyle := true
 
@@ -22,7 +22,7 @@ homepage := Some(url("https://github.com/balhoff/owl-diff"))
 
 scalaVersion  := "2.13.15"
 
-crossScalaVersions := Seq("2.12.20", "2.13.15")
+crossScalaVersions := Seq("2.13.15")
 
 scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
 
