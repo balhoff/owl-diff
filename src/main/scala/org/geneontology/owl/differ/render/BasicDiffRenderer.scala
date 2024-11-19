@@ -1,40 +1,69 @@
 package org.geneontology.owl.differ.render
 
+import org.apache.commons.io.output.ByteArrayOutputStream
 import org.geneontology.owl.differ.Differ.BasicDiff
 import org.geneontology.owl.differ.ShortFormFunctionalSyntaxObjectRenderer
 import org.semanticweb.owlapi.model.{OWLImportsDeclaration, OWLObject}
 import org.semanticweb.owlapi.util.ShortFormProvider
 
+import java.io.{OutputStream, PrintWriter, Writer}
+import java.nio.charset.StandardCharsets
+import scala.util.Using
+
 object BasicDiffRenderer {
 
-  def renderPlain(diff: BasicDiff): String = {
-    if (diff.isEmpty) "Ontologies are identical"
-    else {
-      val (left, right) = groups(diff)
-      val leftRendered = left.map(_.item.toString)
-      val rightRendered = right.map(_.item.toString)
-      if ((diff.left.id == diff.right.id) || (diff.left.id.isAnonymous && diff.right.id.isAnonymous)) format(leftRendered, rightRendered)
-      else format(leftRendered + diff.left.id.toString, rightRendered + diff.right.id.toString)
+  def renderPlainStream(diff: BasicDiff, stream: OutputStream): Unit =
+    Using.resource(new PrintWriter(stream)) { writer =>
+      renderPlainWriter(diff, writer)
     }
-  }
 
-  def render(diff: BasicDiff, shortFormProvider: ShortFormProvider): String = {
-    if (diff.isEmpty) "Ontologies are identical"
-    else {
-      val renderer = new ShortFormFunctionalSyntaxObjectRenderer(shortFormProvider)
-      val (left, right) = groups(diff)
-      val leftRendered = left.map {
-        case OWLObjectItem(item) => renderer.render(item)
-        case OWLImportItem(item) => item.toString
+  def renderPlainWriter(diff: BasicDiff, givenWriter: Writer): Unit =
+    Using.resource(new PrintWriter(givenWriter)) { writer =>
+      if (diff.isEmpty) writer.println("Ontologies are identical")
+      else {
+        val (left, right) = groups(diff)
+        val leftRendered = left.map(_.item.toString)
+        val rightRendered = right.map(_.item.toString)
+        if ((diff.left.id == diff.right.id) || (diff.left.id.isAnonymous && diff.right.id.isAnonymous)) format(leftRendered, rightRendered, writer)
+        else format(leftRendered + diff.left.id.toString, rightRendered + diff.right.id.toString, writer)
       }
-      val rightRendered = right.map {
-        case OWLObjectItem(item) => renderer.render(item)
-        case OWLImportItem(item) => item.toString
-      }
-      if ((diff.left.id == diff.right.id) || (diff.left.id.isAnonymous && diff.right.id.isAnonymous)) format(leftRendered, rightRendered)
-      else format(leftRendered + diff.left.id.toString, rightRendered + diff.right.id.toString)
     }
-  }
+
+  def renderPlain(diff: BasicDiff): String =
+    Using.resource(new ByteArrayOutputStream()) { stream =>
+      renderPlainStream(diff, stream)
+      stream.toString(StandardCharsets.UTF_8)
+    }
+
+  def renderStream(diff: BasicDiff, shortFormProvider: ShortFormProvider, stream: OutputStream): Unit =
+    Using.resource(new PrintWriter(stream)) { writer =>
+      renderWriter(diff, shortFormProvider, writer)
+    }
+
+  def renderWriter(diff: BasicDiff, shortFormProvider: ShortFormProvider, givenWriter: Writer): Unit =
+    Using.resource(new PrintWriter(givenWriter)) { writer =>
+      if (diff.isEmpty) writer.println("Ontologies are identical")
+      else {
+        val renderer = new ShortFormFunctionalSyntaxObjectRenderer(shortFormProvider)
+        val (left, right) = groups(diff)
+        val leftRendered = left.map {
+          case OWLObjectItem(item) => renderer.render(item)
+          case OWLImportItem(item) => item.toString
+        }
+        val rightRendered = right.map {
+          case OWLObjectItem(item) => renderer.render(item)
+          case OWLImportItem(item) => item.toString
+        }
+        if ((diff.left.id == diff.right.id) || (diff.left.id.isAnonymous && diff.right.id.isAnonymous)) format(leftRendered, rightRendered, writer)
+        else format(leftRendered + diff.left.id.toString, rightRendered + diff.right.id.toString, writer)
+      }
+    }
+
+  def render(diff: BasicDiff, shortFormProvider: ShortFormProvider): String =
+    Using.resource(new ByteArrayOutputStream()) { stream =>
+      renderStream(diff, shortFormProvider, stream)
+      stream.toString(StandardCharsets.UTF_8)
+    }
 
   private def groups(diff: BasicDiff): (Set[OWLItem[_]], Set[OWLItem[_]]) = {
     val leftUnique: Set[OWLItem[_]] = diff.left.imports.map(OWLImportItem) ++ diff.left.annotations.map(OWLObjectItem) ++ diff.left.axioms.map(OWLObjectItem)
@@ -42,15 +71,15 @@ object BasicDiffRenderer {
     (leftUnique, rightUnique)
   }
 
-  private def format(removedLines: Set[String], addedLines: Set[String]): String = {
+  private def format(removedLines: Set[String], addedLines: Set[String], writer: PrintWriter): Unit = {
     import org.geneontology.owl.differ.Util.replaceNewlines
-    val removedSorted = removedLines.map(replaceNewlines).map(ax => s"- $ax").toSeq.sorted.mkString("\n")
-    val addedSorted = addedLines.map(replaceNewlines).map(ax => s"+ $ax").toSeq.sorted.mkString("\n")
-    s"""${removedLines.size} axioms in left ontology but not in right ontology:
-$removedSorted${if (removedSorted.nonEmpty) "\n" else ""}
-${addedLines.size} axioms in right ontology but not in left ontology:
-$addedSorted
-"""
+    val removedSorted = removedLines.map(replaceNewlines).map(ax => s"- $ax").toSeq.sorted
+    val addedSorted = addedLines.map(replaceNewlines).map(ax => s"+ $ax").toSeq.sorted
+    writer.println(s"${removedLines.size} axioms in left ontology but not in right ontology:")
+    removedSorted.foreach(writer.println)
+    writer.println()
+    writer.println(s"${addedLines.size} axioms in right ontology but not in left ontology:")
+    addedSorted.foreach(writer.println)
   }
 
   private sealed trait OWLItem[T] {

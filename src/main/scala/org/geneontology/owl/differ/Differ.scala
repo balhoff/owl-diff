@@ -4,7 +4,7 @@ import org.semanticweb.owlapi.model._
 import org.semanticweb.owlapi.model.parameters.Imports
 import org.semanticweb.owlapi.util.AxiomSubjectProvider
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 object Differ {
 
