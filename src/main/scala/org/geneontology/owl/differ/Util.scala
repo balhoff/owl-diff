@@ -1,7 +1,5 @@
 package org.geneontology.owl.differ
 
-import com.google.common.base.Optional
-
 object Util {
 
   implicit class StringOps(val self: String) extends AnyVal {
@@ -15,12 +13,6 @@ object Util {
         s"$prefix$replacement$suffix"
       } else self
     }
-
-  }
-
-  implicit class OptionalOption[T](val self: Optional[T]) extends AnyVal {
-
-    def toOption: Option[T] = if (self.isPresent) Option(self.get) else None
 
   }
 
