@@ -33,7 +33,7 @@ testFrameworks += new TestFramework("utest.runner.Framework")
 libraryDependencies ++= {
   Seq(
     "net.sourceforge.owlapi" %  "owlapi-distribution" % "5.5.1",
-    "org.apache.commons"     %  "commons-text"        % "1.13.0",
+    "org.apache.commons"     %  "commons-text"        % "1.13.1",
     "com.lihaoyi"            %% "utest"               % "0.8.9"  % Test,
     "com.outr"               %% "scribe-slf4j2"       % "3.19.0" % Test
   )
