@@ -2,7 +2,7 @@ organization  := "org.geneontology"
 
 name          := "owl-diff"
 
-version       := "1.3.0"
+version       := "2.0.0"
 
 publishMavenStyle := true
 
@@ -32,7 +32,7 @@ testFrameworks += new TestFramework("utest.runner.Framework")
 
 libraryDependencies ++= {
   Seq(
-    "net.sourceforge.owlapi" %  "owlapi-distribution" % "4.5.29",
+    "net.sourceforge.owlapi" %  "owlapi-distribution" % "5.5.1",
     "org.apache.commons"     %  "commons-text"        % "1.13.0",
     "com.lihaoyi"            %% "utest"               % "0.8.5"  % Test,
     "com.outr"               %% "scribe-slf4j2"       % "3.15.3" % Test

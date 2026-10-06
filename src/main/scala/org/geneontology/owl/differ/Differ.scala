@@ -2,13 +2,11 @@ package org.geneontology.owl.differ
 
 import org.semanticweb.owlapi.model._
 import org.semanticweb.owlapi.model.parameters.Imports
-import org.semanticweb.owlapi.util.AxiomSubjectProvider
+import org.semanticweb.owlapi.util.AxiomSubjectProviderEx
 
 import scala.jdk.CollectionConverters._
 
 object Differ {
-
-  private val AxiomSubjectProviderInst = new AxiomSubjectProvider()
 
   sealed trait ModifiedOntologyContent[A] extends Product with Serializable {
 
@@ -76,7 +74,7 @@ object Differ {
     val allChangedAnnotations: Set[ModifiedOntologyContent[_]] = diff.left.annotations.map(ModifiedOntologyAnnotation(_, false)) ++ diff.right.annotations.map(ModifiedOntologyAnnotation(_, true))
     val groupedAxioms = allChangedAxioms.groupBy {
       case ModifiedAxiom(ax, _)             =>
-        AxiomSubjectProviderInst.getSubject(ax) match {
+        AxiomSubjectProviderEx.getSubject(ax) match {
           case named: OWLNamedObject => IRIGrouping(named.getIRI)
           case iri: IRI              => IRIGrouping(iri)
           case _: OWLClassExpression => GCIGrouping
