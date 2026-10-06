@@ -1,11 +1,9 @@
 package org.geneontology.owl.differ.render
 
-import com.google.common.base.Optional
 import org.apache.commons.io.output.ByteArrayOutputStream
 import org.apache.commons.text.StringEscapeUtils
 import org.geneontology.owl.differ.Differ._
 import org.geneontology.owl.differ.ManchesterSyntaxOWLObjectRenderer
-import org.geneontology.owl.differ.Util.OptionalOption
 import org.geneontology.owl.differ.shortform.{HTMLLinkShortFormProvider, HTMLSafeIRIShortFormProvider, HTMLSafeShortFormProvider}
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model._
@@ -13,7 +11,9 @@ import org.semanticweb.owlapi.util.{AnnotationValueShortFormProvider, SimpleIRIS
 
 import java.io.{OutputStream, PrintWriter, Writer}
 import java.nio.charset.StandardCharsets
+import java.util.Optional
 import scala.jdk.CollectionConverters._
+import scala.jdk.OptionConverters._
 import scala.util.Using
 
 object HTMLDiffRenderer {
@@ -91,7 +91,7 @@ object HTMLDiffRenderer {
           case hasAnnotations: HasAnnotations =>
             val inner = hasAnnotations.getAnnotations.asScala.map(htmlForObject(_)).mkString("\n")
             val objWithoutAnnotations = obj match {
-              case ax: OWLAxiom       => ax.getAxiomWithoutAnnotations
+              case ax: OWLAxiom       => ax.getAxiomWithoutAnnotations[OWLAxiom]
               case ann: OWLAnnotation => factory.getOWLAnnotation(ann.getProperty, ann.getValue)
               case _                  => obj
             }
@@ -159,7 +159,7 @@ object HTMLDiffRenderer {
     }
 
   private def optionalIRI(iriOpt: Optional[IRI]): String = (for {
-    iri <- iriOpt.toOption
+    iri <- iriOpt.toScala
   } yield {
     StringEscapeUtils.escapeHtml4(iri.toQuotedString)
   }).getOrElse("<i>None</i>")
