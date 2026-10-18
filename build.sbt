@@ -18,9 +18,9 @@ licenses := Seq("BSD-3-Clause" -> url("https://opensource.org/licenses/BSD-3-Cla
 
 homepage := Some(url("https://github.com/balhoff/owl-diff"))
 
-scalaVersion  := "2.13.18"
+scalaVersion  := "3.10.0"
 
-crossScalaVersions := Seq("2.13.18")
+crossScalaVersions := Seq("3.10.0")
 
 scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
 
